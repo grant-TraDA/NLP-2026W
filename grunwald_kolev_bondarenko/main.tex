@@ -1,0 +1,183 @@
+%
+% File main.tex
+%
+% NLP course project-proposal template, Warsaw University of Technology.
+% Prepared by Anna Wróblewska, adapted from the ACL 2015 conference
+% formatting template (acl2015.sty), originally by the ACL 2015
+% organizers and earlier ACL/EACL format authors (see acl2015.pdf
+% for the full credits chain).
+
+\documentclass[11pt]{article}
+\usepackage{acl2015}
+\usepackage{times}
+\usepackage{url}
+\usepackage{latexsym}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\setlist{nosep,leftmargin=*}
+
+\setlength\titlebox{6cm}
+
+% You can expand the title box if you need extra space
+% to show all the authors. Please do not make the title box
+% smaller than 5cm (the original size); we will check this
+% in the camera-ready version and ask you to change it back.
+
+
+\title{When Does GraphRAG Break? A Systematic Review and Experimental Study of Graph Quality, Reasoning and Cost\\Project Proposal for NLP Course, Winter 2026/27}
+% https://www.overleaf.com/project/63440c16442dba647b52a1ae
+\author{Wojciech Grunwald (submitted by) \\
+  Album number: 311566 \\
+  {\tt 01159582@pw.edu.pl} \\\And
+  Ljubomir Kolev \\
+  Album number: 348624\\
+  {\tt 01213603@pw.edu.pl} \\ \And
+  Valentyn Bondarenko \\
+  Album number: 335961\\
+  {\tt 01194636@pw.edu.pl} \\ \AND
+  supervisor: Filip Kucia\\
+  Warsaw University of Technology \\
+  {\tt filip.kucia.dokt@pw.edu.pl}}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+{\small\em Template: Anna Wróblewska (Warsaw University of Technology), adapted from the ACL 2015 conference formatting template.}
+\vspace{4pt}
+
+\begin{abstract}
+Graph-based Retrieval-Augmented Generation (GraphRAG) organises a corpus as a graph of entities, relations, communities or passages and is claimed to improve multi-hop reasoning and synthesis. Recent benchmarks, notably GraphRAG-Bench \cite{xiang2026when}, show that these gains depend on the task: vector RAG matches or beats GraphRAG on simple fact lookup, while graph methods help on complex reasoning at a much higher token and indexing cost. These benchmarks, however, evaluate every system on the graph its own pipeline happens to build. They do not ask what happens when that graph is incomplete, noisy or inconsistent, as is typical of LLM-extracted graphs. We address this gap with (i)~a systematic literature review that yields a taxonomy of GraphRAG architectures by graph construction, representation, traversal, reasoning design and reported cost; (ii)~a controlled experiment in which five released systems (Microsoft GraphRAG, LightRAG, HippoRAG~2, Fast-GraphRAG, LinearRAG) and a vector-RAG baseline are run on the same frozen sample of about 200 questions from HotpotQA and GraphRAG-Bench, with a shared generator and evaluation; and (iii)~graded graph perturbations (edge removal, spurious links, entity-name inconsistency) together with manual graph diagnostics. We will report robustness curves per question type, one-time versus per-query cost, paired bootstrap confidence intervals and a failure taxonomy based on at least 40 manually inspected disagreements. The deliverable is a reproducible evaluation suite and evidence-based guidance on when graph structure pays for its cost. A negative result, where vector RAG matches the best GraphRAG system once graph noise is taken into account, counts as a valid outcome.
+\end{abstract}
+
+\section{Scientific goal}
+\label{sec:goal}
+
+\textbf{Problem.} GraphRAG systems add a graph-construction stage between the corpus and the retriever: an LLM (or NER tool) extracts entities and relations, which are then merged, clustered and summarised. Retrieval then traverses this structure rather than just ranking independent chunks—or does both in parallel. Every stage can introduce errors: missed entities, wrong or hallucinated relations, unmerged aliases and lossy summaries. Published evaluations treat the resulting graph as given and report only end-to-end quality on the graph each system builds. As a result, we do not know whether GraphRAG's advantage on multi-hop questions survives realistic graph defects, nor at what point the defects and the extra indexing cost make conventional RAG the better choice.
+
+\textbf{Research questions.}
+\begin{itemize}
+\item[\textbf{RQ1}] How sensitive are released GraphRAG methods to \emph{missing} relations, \emph{spurious} relations and \emph{inconsistent entity names}, and does this sensitivity differ between graph designs (LLM-extracted triple graphs, community-summary graphs, relation-free entity--passage graphs)?
+\item[\textbf{RQ2}] For which question types (factual lookup, multi-hop relational reasoning, contextual synthesis) does graph structure change retrieval and answer quality relative to vector RAG on the same text?
+\item[\textbf{RQ3}] When do accuracy gains stop justifying the costs of graph construction and graph-based retrieval (indexing tokens, wall-clock time, storage/RAM, query latency and query tokens)?
+\item[\textbf{RQ4}] How do measured graph errors (entity/relation precision and coverage of gold evidence) propagate into missing evidence, unsupported answers or excessive retrieval?
+\end{itemize}
+
+\textbf{Hypotheses.}
+\textbf{H1}: Accuracy on multi-hop questions degrades monotonically with edge removal, and removing edges that connect the gold bridge entities hurts much more than removing random edges.
+\textbf{H2}: Systems whose retrieval relies on explicit relation traversal (LightRAG, Fast-GraphRAG) are more sensitive to spurious links than systems that use the graph only to re-weight passages (HippoRAG~2's Personalized PageRank, LinearRAG's relation-free graph).
+\textbf{H3}: On factual lookup, vector RAG is at least as accurate as every GraphRAG system at a fraction of the cost (replicating Obs.~1 and Obs.~4 of \newcite{xiang2026when}).
+\textbf{H4}: At 25\% graph noise, the multi-hop advantage of the best GraphRAG system over vector RAG with reranking is no longer statistically significant.
+
+\section{Significance and state of the art}
+\label{sec:sota}
+
+RAG \cite{lewis2020rag} bases LLM responses on retrieved text chunks. GraphRAG extends it with structure. Microsoft GraphRAG \cite{edge2024graphrag} builds an LLM-extracted entity graph, clusters it into hierarchical communities and answers through local (entity) or global (community-summary) search. LightRAG \cite{guo2024lightrag} indexes entities and relations as key--value pairs with dual-level keyword retrieval. HippoRAG \cite{gutierrez2024hipporag} and HippoRAG~2 \cite{gutierrez2025hipporag2} build an open-IE knowledge graph linked to passages and rank passages with Personalized PageRank. Fast-GraphRAG \cite{circlemind2024fastgraphrag} is a lightweight, promptable PageRank-based variant. LinearRAG \cite{zhuang2026linearrag} avoids relation extraction altogether: it builds a relation-free entity--sentence--passage ``Tri-Graph'' with spaCy NER, so indexing costs no LLM tokens. Surveys \cite{peng2024graphragsurvey,han2024graphragsurvey} catalogue dozens of further variants.
+
+The empirical picture is mixed. \newcite{han2025ragvsgraphrag} find that GraphRAG often underperforms vanilla RAG on single-hop QA. \newcite{zhou2025indepth} re-implement graph-based RAG methods in a unified framework and report substantially higher latency for modest multi-hop gains. \newcite{zeng2025unbiased} show that LLM-judge position and length biases exaggerate reported GraphRAG gains; after debiasing, NaiveRAG sometimes beats LightRAG. Our starting point, GraphRAG-Bench \cite{xiang2026when}, is the most systematic study so far. It uses four task levels on a Novel and a Medical corpus, stage-wise metrics (graph statistics, evidence recall, context relevance, accuracy, faithfulness) and token-cost measurements. It finds that graph methods win on complex reasoning and summarisation but not on fact retrieval, that graph topology differs greatly between systems (e.g.\ HippoRAG~2 produces about $2{,}310$ edges per $10$k tokens) and that prompts can grow to $10^4$--$10^5$ tokens.
+
+\textbf{Gap.} GraphRAG-Bench evaluates graph \emph{statistics} (node/edge counts, degree, clustering) but not graph \emph{correctness}, and it never varies graph quality. Prior robustness work covers adversarial poisoning \cite{liang2025underfire}, document-level noise and counterfactual documents for a single system \cite{amamou2026robust}, and imperfect LLM-built graphs \cite{ma2026robustgraphrag}, the last reporting that even the strongest builder produces correct tuples for only 68\% of query-related gold supporting sentences.. To our knowledge, no study compares the \emph{noise sensitivity of several released GraphRAG systems} against a vector baseline on matched text while also accounting for indexing cost. \textbf{Our project intends to fill this gap}.
+
+\textbf{Impact.} Practitioners decide between graph and vector retrieval from leaderboards built on clean, system-native graphs. A sensitivity analysis together with an accuracy--cost frontier gives them a decision rule based on question type, expected extraction quality and budget. A failure taxonomy also points method designers to the stages (extraction, entity resolution, traversal, context assembly) where robustness work matters most.
+
+\section{Concept and work plan}
+\label{sec:plan}
+
+\textbf{Specific research goals.} (G1)~A documented taxonomy of GraphRAG architectures. (G2)~A frozen, licence-checked benchmark sample and graph indices with recorded statistics. (G3)~A reproducible comparison of vector RAG with at least three, and ideally five, GraphRAG systems. (G4)~Robustness curves under controlled perturbations. (G5)~An accuracy--cost comparison with indexing and per-query costs reported separately. (G6)~A failure taxonomy and practical guidance.
+
+\textbf{Timeline} (weeks counted from proposal approval, early November 2026):
+\begin{itemize}
+\item \textbf{W1--3}: literature review (search and coding of papers); freeze the question sample; environment setup with one pinned virtual environment per system.
+\item \textbf{W3--5}: \emph{feasibility pilot}. All five systems plus the baseline on 20 questions; measure cost and check whether graph internals are accessible. Keep at least three systems for the full study. \emph{Milestone: proof-of-concept report.}
+\item \textbf{W5--8}: Experiments B (question type) and C (cost) on the clean graphs; build the perturbation tooling.
+\item \textbf{W8--11}: Experiment A (robustness); manual graph diagnostics; LLM-judge validation.
+\item \textbf{W11--13}: statistical analysis, disagreement inspection ($\geq$40 cases), failure taxonomy.
+\item \textbf{W13--15}: final report, release of code, configurations and logs. \emph{Milestone: final report.}
+\end{itemize}
+
+\textbf{Preliminary research.} We studied the GraphRAG-Bench paper and its released configurations. All systems in that paper used \texttt{bge-large-en-v1.5} embeddings and, for vector RAG, 256-token chunks with top-5 retrieval and a \texttt{bge-reranker-large} reranker. We will reuse these settings for comparability. Both datasets are publicly available (HotpotQA via its official website and Hugging Face; GraphRAG-Bench via GitHub and Hugging Face), and all five candidate systems have public open-source implementations on GitHub. Using the per-query prompt sizes reported by \newcite{xiang2026when} (about 1k tokens for vector RAG, 39k for MS-GraphRAG local search, 331k for global search, 100k for LightRAG), we estimate that MS-GraphRAG global search would dominate the API budget. We therefore plan to use local search as the primary MS-GraphRAG mode and to run global search only on the synthesis subset. No experimental results exist yet.
+
+\textbf{Risk analysis.}
+\begin{itemize}
+\item \emph{Indexing and API cost}: we cap the corpus size, use a low-cost model for indexing, cache all LLM calls and stop at the pilot's budget estimate. Fallback: drop the most expensive system or mode.
+\item \emph{Dependency conflicts between systems}: one pinned environment or container per system, with versions frozen at pilot time.
+\item \emph{Graph internals not editable}: if a system's graph cannot be perturbed after indexing, we use system-agnostic document-level perturbations and report the two conditions separately.
+\item \emph{LLM-judge bias}: pointwise rather than pairwise judging, a judge model different from the generator, and validation against human labels.
+\item \emph{Time}: a minimum viable scope of three GraphRAG systems, one dataset for perturbations and two noise levels.
+\end{itemize}
+
+\section{Approach and research methodology}
+\label{sec:method}
+
+\textbf{Systematic review.} Similarly to the RAG review of \newcite{brown2025slr}, we will search the ACL Anthology, arXiv and Semantic Scholar (2023--2026) for GraphRAG papers using a fixed set of queries (e.g.\ \texttt{"GraphRAG"}, \texttt{"graph retrieval-augmented generation"}), and follow the references of \newcite{xiang2026when} and the two surveys. We include papers that propose or evaluate graph-based retrieval for LLM generation over text corpora with empirical results, and exclude pure question answering over curated knowledge graphs. The queries and inclusion criteria are documented so that the selection can be repeated. Each included study is coded for graph construction, representation, traversal and retrieval, reasoning design, cost reporting, benchmarks, robustness analysis and stated limitations.
+
+\textbf{Data sample.} We will freeze a sample of about 200 questions with fixed random seeds:
+\begin{itemize}
+\item about 100 questions from the HotpotQA dev distractor set \cite{yang2018hotpotqa}, stratified into bridge and comparison questions. The corpus is the union of their gold and distractor paragraphs (about 1,000 paragraphs), not all of Wikipedia.
+\item about 100 questions from GraphRAG-Bench (Novel subset, plus Medical if the budget allows), split into fact retrieval, complex reasoning and contextual summarisation. Creative generation is excluded.
+\end{itemize}
+HotpotQA's sentence-level supporting facts give gold evidence and gold bridge entities, which makes \emph{targeted} perturbations possible.
+
+\textbf{Systems and controls.} The systems are vector RAG (with and without reranking) and MS-GraphRAG, LightRAG, HippoRAG~2, Fast-GraphRAG and LinearRAG, all indexed on identical source text. We fix the indexing LLM, the generation LLM (a low-cost API model such as GPT-4o-mini as in \newcite{xiang2026when}, plus an open-weights model such as Qwen2.5-7B-Instruct as a reproducibility check if time allows), the embedding model, the answer-format instructions and temperature~0. System-specific retrieval logic is kept at its defaults, and every deviation is logged.
+
+\textbf{Experiment A: robustness.} For systems that expose their graph (graph files or stores), we edit the graph after indexing:
+\begin{itemize}
+\item \emph{edge removal} at 10\% and 25\%, applied either uniformly at random or targeted at edges incident to gold bridge entities;
+\item \emph{spurious links} at 10\% and 25\%, either random or type-consistent ``plausible'' links;
+\item \emph{entity inconsistency}: a fraction of entities is split into alias nodes whose edges are partitioned between them.
+\end{itemize}
+Where graph editing is not possible, we apply matched \emph{document-level} perturbations before indexing: deleting bridge sentences, inserting contradicting distractor sentences, and replacing entity mentions with name variants. All perturbed artefacts are labelled as synthetic. Each condition is run with 3 seeds.
+
+\textbf{Experiment B: question type.} We report metrics separately per question type and never pool across types.
+
+\textbf{Experiment C: cost.} We measure graph-build wall-clock time, indexing LLM input and output tokens, index storage, peak RAM, retrieval latency, query tokens and answer quality. One-time and per-query costs are reported separately. We compute the break-even query volume at which a system's indexing cost is amortised by its accuracy gain.
+
+\textbf{Graph diagnostics.} For a fixed subset of about 30 HotpotQA questions, we manually check extracted entities and relations against the source sentences: precision, coverage of gold supporting facts and alias-merge errors. We then link these errors to downstream outcomes (RQ4).
+
+\textbf{Metrics.}
+\begin{itemize}
+\item Answer correctness: EM/F1 for HotpotQA; the GraphRAG-Bench accuracy and ROUGE-L for that benchmark.
+\item Evidence recall: retrieved context mapped back to gold supporting sentences.
+\item Unsupported-answer rate: claim-level faithfulness to the retrieved context \cite{es2024ragas}.
+\item Cost, as defined above.
+\end{itemize}
+LLM-judge scores will be validated on 100 human-labelled items. Human and automated assessments are reported separately.
+
+\textbf{Statistical analysis.} All comparisons are paired on the same questions. We report 95\% paired bootstrap confidence intervals with 10,000 resamples \cite{koehn2004bootstrap}, McNemar's test for binary correctness and Holm correction across systems and conditions. Robustness is summarised as the slope of accuracy against noise level and as the noise level at which GraphRAG's advantage over vector RAG loses significance. At least 40 system disagreements are inspected manually, and each is attributed to a failing stage: extraction, entity resolution, traversal or retrieval, context assembly, or generation.
+
+\textbf{Tools and equipment.} Python 3.11, the official repositories of each system, NetworkX/igraph, sentence-transformers, FAISS, spaCy and pandas/SciPy. Compute: team laptops plus a university GPU node or Google Colab for the embeddings and the optional open model; a capped LLM API budget (provisionally USD~50--100, to be fixed after the pilot). All configurations, prompts, seeds and logs will be versioned on GitHub.
+
+\section{Data statement}
+\label{sec:data}
+\textbf{Sources}: HotpotQA \cite{yang2018hotpotqa} (Wikipedia; CC~BY-SA~4.0) and GraphRAG-Bench \cite{xiang2026when} (public-domain Project Gutenberg novels and NCCN-derived medical text; distributed via GitHub/Hugging Face, with the repository licence to be verified, MIT according to the README).
+\textbf{Personal data}: HotpotQA mentions public figures, and GraphRAG-Bench's medical text is guideline material with no patient records. We will not present LLM-extracted relations about identifiable people as verified facts.
+\textbf{Our artifacts}: perturbed graphs are labelled as synthetic and released only as code and diffs, under the licences of the source data.
+\textbf{Services}: paid APIs and exact model versions will be disclosed, and no credentials or private files will be published.
+
+\section{Contribution table}
+\label{sec:contrib}
+{\small
+\begin{tabularx}{\columnwidth}{@{}lXr@{}}
+\toprule
+Member & Proposal-phase work & h \\
+\midrule
+W.~Grunwald & Topic analysis, reading GraphRAG-Bench, RQs/hypotheses, perturbation design, writing \& editing & 12 \\
+L.~Kolev & Review of GraphRAG systems (MS-GraphRAG, LightRAG, HippoRAG~2, Fast-GraphRAG, LinearRAG), cost/risk analysis & 10 \\
+V.~Bondarenko & HotpotQA analysis, data statement, metrics \& statistics plan, bibliography & 10 \\
+\bottomrule
+\end{tabularx}
+}
+
+\noindent\textit{Planned split:} Grunwald leads the review and perturbation tooling (MS-GraphRAG, LightRAG); Kolev handles HippoRAG~2, Fast-GraphRAG, LinearRAG and cost instrumentation; Bondarenko handles the vector baseline, data freezing, evaluation and statistics. All members take part in the literature review and manual annotation.
+
+\section{Declaration of LLM use}
+\label{sec:llm}
+We used Claude (Anthropic) to help draft and structure the text of this proposal from the supervisor's project description and the provided papers, and to search for related literature. All claims, citations and numbers were checked by the team against the original sources, and the research design decisions are our own. In later phases, LLMs are part of the experimental systems (a low-cost API model such as GPT-4o-mini for indexing and generation, and optionally an open-weights model such as Qwen2.5-7B-Instruct) and act as judges. These uses will be reported with exact versions, and judge scores will be validated against human labels.
+
+\bibliographystyle{acl}
+\bibliography{references}
+
+\end{document}

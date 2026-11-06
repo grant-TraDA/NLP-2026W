@@ -1,0 +1,335 @@
+%
+% File main.tex
+%
+% NLP course project-proposal template, Warsaw University of Technology.
+% Prepared by Anna Wróblewska, adapted from the ACL 2015 conference
+% formatting template (acl2015.sty), originally by the ACL 2015
+% organizers and earlier ACL/EACL format authors (see acl2015.pdf
+% for the full credits chain).
+
+\documentclass[11pt]{article}
+\usepackage{acl2015}
+\usepackage{times}
+\usepackage{url}
+\usepackage{latexsym}
+\usepackage{xcolor}
+\usepackage{float}
+
+%\setlength\titlebox{5cm}
+
+% You can expand the title box if you need extra space
+% to show all the authors. Please do not make the title box
+% smaller than 5cm (the original size); we will check this
+% in the camera-ready version and ask you to change it back.
+
+
+\title{From guidelines to practice: Do NLP papers follow reporting requirements?\\Project PoC for NLP Course, Winter 2026/27}
+% https://www.overleaf.com/project/63440c16442dba647b52a1ae
+\author{Nuno Aguilar \\
+  K-9290 \\
+  {\tt 01219660@pw.edu.pl} \\\And
+  Author 2 \\
+  K-9333 \\
+  {\tt 01219708@pw.edu.pl} \\ \And
+  Noah Bernard \\
+  K-9451 \\
+  {\tt 01219843@pw.edu.pl} \\ \AND
+  supervisor:  Filip Kucia\\
+  Warsaw University of Technology \\
+  {\tt filip.kucia.dokt@pw.edu.pl}}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+\subsection{Background and Motivation}
+
+Science advances by accumulation. A result is useful only if others can inspect it, build on it and, where necessary, challenge it. The scientific method therefore depends on reproducibility, independent researchers must be able to verify a reported finding using the information the original authors provide. In natural language processing (NLP), this means that papers must describe their data, code, models, experimental settings and evaluation in enough detail for others to check the claims.
+
+This ideal conflicts with the incentives of a highly competitive field such as this. Datasets, training recipes and code are valuable assets, and withholding them can preserve your advantage. While some other resources simply cannot be shared at all, for example because of licences, privacy or commercial restrictions. Open sharing and competitive pressure therefore pull in opposite directions, and leaving the balance to individual authors would make reporting uneven. This is why venues set explicit rules that define what authors must disclose, what they may withhold, and how they should justify exceptions.
+
+NLP venues have introduced such rules steadily: checklists for experimental reporting, reproducibility checklists, a mandatory Limitations section and, more recently, questions on responsible research and on the use of AI tools. Whether such rules change what authors actually report is another question. Earlier audits found incomplete reporting: in a study of 400 AI papers, only 20--30\% of the documentation variables were reported, and only one measure improved significantly over time. In computational linguistics, data was more often available than code, and source code availability showed positive trends, especially at conferences that actively promote reproducibility. Studies of checklist responses have examined what authors say they report, and a recent analysis of the EMNLP 2025 checklist found that 44.9\% of the justifications given for ``No'' answers were weak or empty.
+
+\subsection{Problem Statement}
+
+Two gaps remain. First, most audits examine one practice or one point in time, so they cannot show how compliance evolves as requirements change. Second, policy changes are hard to separate from other developments. A Limitations section became mandatory at many top venues in late 2022, which is also the period of rapid adoption of large language models (LLMs), and the authors of the most closely related study acknowledge that they cannot attribute the observed trends to the policy alone \cite{thaepprasit-etal-2026-limits}.
+
+We therefore ask: \emph{how has compliance with the reporting requirements of ACL-family venues changed over time, and can these changes be separated from changes in conference policy and from the post-ChatGPT era?} Our team studies this question on NAACL papers, with AAAI as an optional extension, in parallel with teams working on ACL and EMNLP. We test two hypotheses:
+\begin{itemize}
+\item \textbf{H1:} compliance with a given requirement increases after the venue introduces it.
+\item \textbf{H2:} changes in compliance after 2022 are larger for requirements that were newly introduced than for requirements whose rules did not change, which would suggest a policy effect beyond a general shift of the field.
+\end{itemize}
+
+\section{State of the Art}
+
+\subsection{Evaluating Compliance with Reporting Requirements}
+
+\paragraph{Manual analyses.}
+Studies of how researchers report the limitations of their work have long existed in other fields, but they were mostly conducted manually or through keyword search \cite{thaepprasit-etal-2026-limits}. In NLP, such analyses only became possible at scale once a dedicated Limitations section was made mandatory, first at EMNLP 2022 and ACL 2023, and then across all ACL Rolling Review venues from December 2023 \cite{thaepprasit-etal-2026-limits}. With several thousand accepted papers per conference each year, exhaustive manual review is no longer feasible.
+
+\paragraph{Automatic approaches.}
+A first line of work relies on classical NLP methods. \newcite{lan2024limitations} trained classifiers to detect and categorise self-acknowledged limitations in randomised controlled trial publications and applied them to roughly 12K papers. \newcite{alazher2024limtopic} applied topic modelling combined with LLM-based summarisation to the limitations of ACL 2023 papers, while BAGELS \cite{alazher2025bagels} built a benchmark for extracting and generating limitations from ACL, NeurIPS and PeerJ papers. \newcite{xu2025limitations} further evaluated whether LLMs can identify critical limitations in AI research papers and proposed a taxonomy of limitation types. Large-scale analyses are also enabled by open corpora such as ACL OCL \cite{rohatgi2023acl}, which provides the full text of ACL Anthology papers.
+
+\paragraph{LLMs as annotators.}
+More recently, LLMs have been used directly as annotators for qualitative coding. \newcite{xiao2023supporting} showed that GPT-3 combined with a codebook can perform deductive coding, and \newcite{parfenova2025text} compared human experts with LLMs on inductive coding. \newcite{zhong2025hicode} proposed hierarchical inductive coding with LLMs. The work closest to ours, \newcite{thaepprasit-etal-2026-limits}, analysed 16,067 Limitations sections from ACL and EMNLP papers (2020--2025) with a human-in-the-loop framework: an LLM (Gemini) assigns codes from an evolving codebook, while humans validate every codebook update. The LLM coder was evaluated against 150 human-annotated papers, reaching an F1 of 0.80; adding the LLM as an extra annotator left inter-annotator agreement essentially unchanged (Krippendorff's $\alpha$ of 0.647 vs.\ 0.644 for humans only). Their results also show the effect of the policy: fewer than 10\% of papers included a Limitations section before the mandate, compared with 97.8--100\% afterwards.
+
+\paragraph{Gap addressed by our work.}
+Existing studies focus on a single requirement (the Limitations section), on ACL and EMNLP only, and on what authors write rather than on whether they comply with the full set of venue guidelines. Our project extends this line of work to NAACL (and optionally AAAI) and to several reporting requirements beyond limitations, such as ethics statements, reproducibility checklists and data documentation. Following the validation protocol of \newcite{thaepprasit-etal-2026-limits}, we will compare LLM-based compliance judgements with manual annotations on a representative sample, using precision, recall, F1 and Krippendorff's $\alpha$.
+
+\subsection{Reproducibility, Code and Data Sharing, and Documentation}
+
+\paragraph{Reproducibility checklists.}
+The term reproducibility is used inconsistently across NLP, and a systematic review of the field found no agreed definition or way of measuring it \cite{belz2021systematic}. Checklists became the main practical response. \newcite{pineau2021improving} describe the NeurIPS 2019 reproducibility programme, which combined a code-submission policy, a reproducibility challenge, and a checklist, establishing the main cross-venue precedent for coupling policy with a reporting form. Within ACL-family venues, \newcite{magnusson-etal-2023-reproducibility} analysed over 10K anonymised checklist responses from EMNLP, NAACL, and ACL. These are, however, self-reports collected at submission time rather than measurements of the published text, and a recent analysis of the EMNLP 2025 checklist found that many justifications for ``No'' answers were weak or empty \cite{jinnath2026aclresponsiblenlpchecklist}. A ticked box therefore does not guarantee that the information appears in the paper.
+
+\paragraph{Code and data sharing.}
+Studies that inspect published papers show that sharing falls short of what reproducibility needs. \newcite{gundersen2018state} scored 400 AI papers on documentation variables and reported that only a minority (20--30\%) were documented, with a significant improvement over time for just one measure. This is the audit design closest to ours, since each paper is scored on a fixed set of variables and trends are tested across years. In NLP, \newcite{arvan2022reproducibility} measured trends in source code availability across ACL venues, finding positive trends especially at venues that promote reproducibility, while noting that code release alone is insufficient. Existing studies, however, cover single practices or short time spans, and none links observed paper-level changes directly to dated policy implementations.
+
+\paragraph{Data and model documentation.}
+A parallel line of work asks what should be reported about the data and models themselves. \newcite{bender2018data} proposed data statements specifically for NLP, arguing that explicit documentation improves generalisation claims and helps identify dataset bias. Dataset documentation, licences, and ethical considerations have since been incorporated into venue checklists, making them measurable alongside other reporting requirements.
+
+\paragraph{Implications for our rubric.}
+Taken together, these works supply concrete items for a compliance rubric: code and data availability, hyperparameter and compute reporting, statistical reporting, and dataset documentation. They also show the limits of existing evidence: audits are mostly single-snapshot and single-practice, and checklist studies rely on self-reports. We therefore score the published text itself, across several practices and years, and link the results to the requirements in force at each venue.
+
+\subsection{Limitations and Responsible-Research Reporting}
+
+\paragraph{From ethical principles to checklists.}
+Reporting requirements in Natural Language Processing (NLP) have moved from voluntary good practice to formal venue policy.
+\newcite{leidner-plachouras-2017-ethical} were among the first to treat ethics in NLP as a matter of process.
+They generalised the privacy-by-design principles into an ``ethical by design'' approach, in which ethical review accompanies a project from research through development to deployment.
+They proposed an ethics review board with the power to approve or veto projects, and they listed NLP-specific concerns such as privacy, bias, and the treatment of crowdworkers.
+They also described disclosing a system's limitations to its users as responsible behaviour.
+\newcite{rogers-etal-2021-just-think} turned the data-related part of this agenda into a concrete instrument.
+Their position paper identified copyright, privacy, transparency, reproducibility, and harm avoidance as principles that often conflict.
+They proposed a voluntary Responsible Data Use checklist, to be filled in by authors and ideally attached to the paper.
+It contains items on the legal basis of the data, the documentation of the source population, and the limits within which data can safely be used and reused.
+The authors also noted that NAACL, ACL-IJCNLP, and EMNLP had adopted ethics review policies in 2021.
+This checklist became a basis for the Responsible NLP Checklist introduced at NAACL 2022 and later adopted by ACL Rolling Review (ARR).
+
+\paragraph{Empirical studies of reported content.}
+Empirical work on what authors report under these requirements has grown only recently.
+\newcite{benotti-blackburn-2022-ethics} manually classified the ethics consideration sections of ACL 2021 (Association for Computational Linguistics) long papers.
+They found such sections in 15.7\% of ACL 2021 papers and in 23.3\% of long papers at ACL 2022.
+\newcite{karamolegkou-etal-2025-ethical} built EthiCon, a corpus of 1,580 ethical concern statements from the ACL Anthology.
+They compared the concerns it contains with those named by the public and by professionals in a survey.
+\newcite{magnusson-etal-2023-reproducibility} analysed 10,405 anonymised responses to the NLP Reproducibility Checklist from EMNLP 2020 and 2021 (Empirical Methods in Natural Language Processing), NAACL 2021, and ACL 2021.
+They found increased reporting of efficiency, validation performance, summary statistics, and hyperparameters after the checklist was introduced, but only 46\% of submissions claimed to release code.
+Their evidence comes from self-reported answers, not from the published papers.
+\newcite{jinnath2026aclresponsiblenlpchecklist} examined the Responsible NLP Checklist at EMNLP 2025 and released the responses and their justifications.
+They found signs of surface compliance in ethics reporting, with 53\% of authors dismissing potential risks or social impacts of their work.
+They concluded that the checklist may encourage box-ticking more than reflection.
+
+\paragraph{Mandatory Limitations sections.}
+The mandatory Limitations section is the best-documented requirement so far.
+It became mandatory at EMNLP 2022 and ACL 2023, and ARR adopted it in December 2023.
+\newcite{thaepprasit-etal-2026-limits} analysed 16,067 Limitations sections from ACL and EMNLP papers published between 2020 and 2025 with a human-AI qualitative coding framework.
+Voluntary inclusion was below 10\% before the mandate, while compliance reached 97.8\% at EMNLP 2022, 98.9\% at ACL 2023, and 100\% at EMNLP 2025.
+The content also shifted.
+The code ``Scope Limitation'' rose from roughly 30\% of papers in 2020 to over 65\% in 2025, with ``Model Scale'' as the fastest-growing sub-code.
+The average number of distinct limitation types per section increased from 1.63 to 3.02, while section length stayed roughly constant.
+The authors caution that these trends are correlational.
+The rise of large language models (LLMs) coincides with the mandate, and they state that a more controlled analysis is needed to separate the two.
+
+\paragraph{Research gap.}
+Taken together, these studies document what authors report under one reporting instrument at a time: ethics statements, checklists, or Limitations sections.
+To our knowledge, none reconstructs the requirements that applied in each year from archived calls for papers and guidelines, and none measures compliance with several requirement types in the published papers.
+None tests whether changes coincide with specific policy transitions or with the LLM era.
+Our project addresses this gap.
+
+\section{Dataset}
+\label{sec:dataset}
+
+\paragraph{Sources}
+The dataset will consist of two primary components. First, historical NAACL author guidelines, calls for papers, and reporting policies from 2020--2026 will be manually retrieved via the Internet Archive. Second, the corresponding full-text published papers will be programmatically downloaded from the public ACL Anthology and parsed into plain text using Python. 
+\paragraph{Items to collect}
+We aim to analyze \textit{all} available main proceedings papers from NAACL within the 2020--2026 timeframe, yielding an estimated corpus of 2,500 to 3,000 papers. Expanding the data collection pipeline to include AAAI is considered a potential future extension.
+\paragraph{License}
+ll papers sourced from the ACL Anthology are distributed under the open-access Creative Commons Attribution 4.0 International License (CC-BY 4.0).
+\paragraph{Label Definition}
+We will evaluate compliance across five specific reporting dimensions: (1) Limitations Section, (2) Ethics / Broader Impacts Statement, (3) Code \& Data Availability, (4) Computational Budget, and (5) Completion of the Responsible NLP Checklist. Compliance will be annotated using a 3-point ordinal scale: 
+    \begin{itemize}
+        \item \textbf{0 = Absent} (Requirement not addressed).
+        \item \textbf{1 = Partially present} (e.g., a brief inline mention or paragraph, without strict adherence to formatting).
+        \item \textbf{2 = Present} (Full compliance, e.g., a dedicated section or formally attached checklist).
+    \end{itemize}
+\paragraph{Class Balance}
+Due to the longitudinal nature of this study, we anticipate a severe temporal class imbalance rather than a static distribution. We project that pre-2022 papers will skew heavily toward label \textbf{0} for categories like Ethics and Limitations. Conversely, post-2023 papers---driven by strict policy enforcement and the post-ChatGPT era---are expected to shift strongly toward labels \textbf{1} and \textbf{2}.
+\paragraph{Annotations}
+We will adopt a hybrid evaluation strategy inspired by the methodology of \newcite{thaepprasit-etal-2026-limits}. A stratified validation sample of approximately 150 papers will be manually annotated by the three team members by \textbf{January 13, 2027} to establish a robust Inter-Annotator Agreement (IAA) baseline. Once human consensus is validated, the remaining 2,500+ documents will be processed using an automated LLM-based evaluation pipeline. A smaller sample will be already available, as a Proof of Concept, by \textbf{December 2, 2026}.
+
+\section{Proposed Approach}
+
+Our goal is to measure how well NAACL papers comply with the reporting requirements of the venue, and how this compliance evolves when the guidelines change and with the introduction of LLM. 
+
+\paragraph{Data collection.}
+We will collect all main-conference and Findings papers from every NAACL edition held between 2020 and 2026 from the ACL Anthology, together with their metadata (year, track, paper format). PDFs will be converted to text with an open-source parser such as Docling, and section headings will be used to locate the relevant parts of each paper (Limitations, Ethics Statement, Responsible NLP checklist, appendices). For older papers, the full text available in ACL OCL \cite{rohatgi2023acl} will be used to cross-check our extraction.
+
+\paragraph{From guidelines to a rubric.}
+For each NAACL edition, we will translate the official author guidelines (described in Section~\ref{sec:dataset}) into a rubric of verifiable items, for example: presence of a dedicated Limitations section, presence of an Ethics Statement, completion of the Responsible NLP checklist, availability of code and data, and documentation of datasets and human annotation. Each item will be scored as \emph{present}, \emph{partially present} or \emph{absent}, and linked to the year in which it became mandatory or recommended. This lets us compare compliance before and after each policy change.
+
+\paragraph{Automatic compliance checking.}
+We will first apply simple rule-based checks (section titles, keywords, links to repositories) as a baseline. We will then use an LLM as a judge: for each paper and rubric item, the model receives the relevant sections, the item definition and a few annotated examples, and must justify its answer before giving a score. This setting follows the best-performing configuration of \newcite{thaepprasit-etal-2026-limits}, which combines code definitions, few-shot examples and chain-of-thought prompting.
+
+\paragraph{Validation.}
+To check the reliability of the automatic method, we will manually annotate a representative sample of papers, stratified by year and paper format. Each paper in the sample will be annotated independently by at least two team members, and disagreements will be resolved by discussion. We will compare the LLM judgements with the human consensus using precision, recall and F1 and measure inter-annotator agreement with Krippendorff's $\alpha$, with and without the LLM as an additional annotator \cite{thaepprasit-etal-2026-limits}.
+
+\paragraph{Analysis and work plan.}
+Once validated, the method will be applied to the full NAACL corpus to study (i) compliance rates per requirement and per year, (ii) changes around each guideline update, and (iii) differences between paper formats. Results will be compared with those of the ACL and EMNLP teams. Data collection and the rubric will be completed in November, manual annotation and validation in December, and the full-scale experiments and analysis by January.
+
+\section{Conclusion and Future Work}
+
+Reporting requirements exist to balance two goals that pull in opposite directions: the open sharing that reproducibility demands and the competitive pressure that discourages it. Whether these rules change what authors actually report has rarely been tested over time, and it is hard to separate the effect of a policy from the broader shift brought by large language models. We proposed to address this by turning the historical NAACL author guidelines into an auditable rubric, measuring compliance on published papers with manual validation, and testing whether changes coincide with policy transitions or with the post-ChatGPT period. A null result would be as informative as a positive one.
+
+In the coming weeks we will finalise the rubric and the guideline dataset, run a pilot annotation to check agreement between annotators, and compare an LLM-based annotator with human judgements. The full analysis will follow in January. The main risks are the small number of NAACL editions, which limits statistical power, and the overlap between policy changes and the LLM era. We will state both openly when reporting results, and we will compare our findings with those of the teams working on other venues.
+
+\section*{Data Statement}
+The primary dataset consists of published scientific papers sourced from the public ACL Anthology (NAACL), distributed under a Creative Commons (CC-BY 4.0) license or equivalent academic open-access terms. Historical author guidelines will be compiled from official venue websites. While the papers contain personal data in the form of author names and affiliations, our analysis will strictly aggregate compliance metrics at the venue and temporal level. No individual authors will be judged, profiled, or ranked, ensuring privacy and mitigating risks to professional reputation.
+
+\section*{Declaration of LLM Use}
+We used Claude (Anthropic) to help structure the report, improve readability and find relevant papers.
+
+
+\bibliographystyle{acl}
+\bibliography{bibliography}
+
+\clearpage
+\onecolumn
+\appendix
+\section{State-of-the-Art Literature Comparison}
+\label{sec:appendix_sota}
+
+\begin{table}[H] 
+\centering
+
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{p{2.3cm}p{3.6cm}p{3.7cm}p{5.5cm}}
+\hline
+\textbf{Work} & \textbf{Data analysed} & \textbf{What they did} & \textbf{Key findings} \\
+\hline
+\newcite{gundersen2018state}, AAAI 2018 &
+400 papers from two AI conferences, IJCAI and AAAI (2013--2016). &
+Checked whether each paper documents what is needed to reproduce it (experiment, data and method). &
+No paper documented everything. Typically only 20--30\% of the needed details were given. Documentation improved over time on only one of the six measures used. \\
+\hline
+\newcite{wieling2018reproducibility}, Comput.\ Linguistics 2018 &
+All 395 full papers from ACL 2011 and ACL 2016. &
+Looked for links to code and data, e-mailed authors when links were missing, and tried to re-run the results of 10 papers. &
+Data was often shared, code less often. Papers with a working code link almost doubled between 2011 and 2016. When no link was given, authors sent their code in only about one third of cases. Only 1 of the 10 papers gave exactly the same results (6 gave roughly the same). \\
+\hline
+\newcite{arvan2022reproducibility}, EMNLP 2022 &
+Papers from ACL, EMNLP, NAACL, LREC and COLING, 2016 to mid-2022 (about 15,900 accepted papers), plus 8 random EMNLP 2021 papers that released code. &
+Counted how many papers link to code, and tried to re-run the 8 papers using their released code. &
+More papers released code over time, most at conferences that stress reproducibility (EMNLP, ACL, NAACL). But code alone is not enough: only 2 of the 8 papers could be re-run. \\
+\hline
+\newcite{magnusson-etal-2023-reproducibility}, Findings of ACL 2023 &
+10,405 reproducibility-checklist answers submitted to EMNLP 2020, EMNLP 2021, NAACL 2021 and ACL 2021. &
+Analysed what authors said in the checklist when submitting (self-reported, not checked against the published papers). &
+After the checklist was introduced, authors reported more about computing cost, validation results, statistics and hyperparameters. Papers with more ``Yes'' answers were accepted more often. Only 46\% of submissions said they would release code, and those that did scored higher on reproducibility. \\
+\hline
+\newcite{thaepprasit-etal-2026-limits}, Findings of EMNLP 2026 &
+16,067 Limitations sections from ACL and EMNLP papers (2020--2025). &
+An LLM labelled the types of limitation in each section and humans reviewed the label list. The LLM matched human labels reasonably well (F1 = 0.80). &
+Before the section became mandatory, fewer than 10\% of papers had one. Afterwards almost all did (97.8\% at EMNLP 2022, 98.9\% at ACL 2023, 100\% at EMNLP 2025). What authors wrote also changed, but the rule and the rise of large language models happened together, so the cause is unclear. \\
+\hline
+\newcite{jinnath2026aclresponsiblenlpchecklist}, arXiv 2026 &
+Published Responsible NLP checklists of 3,214 EMNLP 2025 papers (1,809 main track, 1,405 Findings). &
+Extracted answers and explanations with an automated pipeline (checked on 71 papers) and judged explanations for ``No'' answers by their length. &
+Authors answered ``Yes'' far more often on reproducibility than on ethics and risk. In the main track, 44.9\% of explanations for ``No'' were very short (10 words or fewer) or empty, and over half of authors dismissed potential risks of their work. \\
+\hline
+\newcite{xiao2023supporting}, IUI 2023 &
+One case study: coding of curiosity-driven questions with an expert-written codebook. &
+Gave GPT-3 a codebook (a list of labels with definitions) and asked it to label each text (deductive coding). &
+The LLM's labels agreed with expert labels at a fair-to-substantial level, with no model training. \newcite{thaepprasit-etal-2026-limits} use this ``codebook + LLM'' recipe as their baseline (F1 = 0.75, against 0.80 for their improved prompt). \\
+\hline
+\newcite{rohatgi2023acl}, EMNLP 2023 &
+73,300 papers from the ACL Anthology, covering seven decades. &
+Converted the Anthology PDFs into structured full text (sections, figures, citations) and linked each paper to Semantic Scholar. &
+Provides a ready-to-use corpus of ACL-family papers with section structure, which makes large-scale text analysis possible. \newcite{thaepprasit-etal-2026-limits} use it for papers published before EMNLP 2022. \\
+\hline
+\newcite{lan2024limitations}, J.\ Biomed.\ Inform.\ 2024 &
+200 clinical-trial (RCT) papers annotated by hand; the best model was then applied to about 12,000 more. &
+Defined 15 categories of limitation, labelled the 200 papers and trained language models to find limitation sentences and classify their type. &
+The model found limitation sentences with F1 = 0.82 and assigned the right type with F1 = 0.70. The authors argue such tools could let journals automatically flag papers with poor limitation reporting. \\
+\hline
+\newcite{alazher2024limtopic}, JCDL 2024 &
+Limitations sections of ACL 2023 papers. &
+Grouped the limitation sentences into topics with BERTopic and an LLM, then had an LLM title and summarise each topic. &
+GPT-4 gave the most coherent topics and the best summaries among the LLMs tested. \newcite{thaepprasit-etal-2026-limits} note that topic modelling can miss rare or new topics, which matters when tracking change over time. \\
+\hline
+\newcite{parfenova2025text}, Findings of NAACL 2025 &
+Text quotes labelled by human experts and by six open-source LLMs. &
+Compared humans and LLMs at open coding (inventing labels for a text) in zero-shot, few-shot and fine-tuned settings, and had experts rate the labels. &
+Humans were better on complex sentences, LLMs on simple ones. LLMs often matched the reference labels more closely, yet experts sometimes rated human labels higher. LLMs suit straightforward coding but not subtle interpretation. \\
+\hline
+\newcite{xu2025limitations}, ACL 2025 &
+A benchmark of AI papers: synthetic ones (papers deliberately altered to contain flaws) and real limitations written in ICLR 2025 reviews. &
+Built a taxonomy of limitation types in AI research and tested whether LLM systems can spot limitations, with and without retrieving related literature. &
+Provides the first benchmark for this task and a list of limitation types, later reused as a starting codebook by \newcite{thaepprasit-etal-2026-limits}. Retrieving related literature helps LLMs identify more limitations. \\
+\hline
+\end{tabular}
+\caption{SOTA papers}
+\label{tab:sota_summary}
+\end{table}
+
+\clearpage
+
+\begin{table}[H]   % era table*[h!]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{p{2.3cm}p{3.6cm}p{3.7cm}p{5.5cm}}
+\hline
+\textbf{Work} & \textbf{Data analysed} & \textbf{What they did} & \textbf{Key findings} \\
+\hline
+\newcite{alazher2025bagels}, Findings of EMNLP 2025 &
+Limitations extracted from ACL, NeurIPS and PeerJ papers, supplemented with reviewers' comments. &
+Built a dataset of limitations, a retrieval-based method to generate limitations with LLMs, and a way to evaluate the generated text. &
+Offers a ready-made benchmark for extracting and generating limitations, motivated by the fact that authors often under-report them. \newcite{thaepprasit-etal-2026-limits} used its extractions to design their first codebook. \\
+\hline
+\newcite{leidner-plachouras-2017-ethical}, EthNLP 2017 &
+No data: a position paper on ethics in NLP research and development. &
+Generalised ``privacy by design'' into ``ethical by design'', listed NLP-specific ethical issues, and proposed a process built around an ethics review board that can approve or veto projects. &
+Argues that ethics should accompany a project from research to deployment. Names concerns such as privacy, bias, treatment of crowdworkers and automation, and states that disclosing a system's limitations to its users is responsible behaviour. A conceptual proposal, not tested empirically. \\
+\hline
+\newcite{rogers-etal-2021-just-think}, Findings of EMNLP 2021 &
+No data: a position paper on legal and ethical principles for collecting and sharing text data. &
+Discussed copyright, privacy, transparency, reproducibility and ``do no harm'', and the tensions between them. Turned them into a Responsible Data Use checklist for papers that reuse or create resources. &
+Proposes a voluntary checklist (legal basis, data collection protocol, safe use, safe reuse, ethics review), ideally attached to the paper as an appendix. It later contributed to the ARR Responsible NLP Checklist, together with the NeurIPS 2021 and NLP reproducibility checklists. \\
+\hline
+\newcite{benotti-blackburn-2022-ethics}, EMNLP 2022 &
+The 572 long papers of ACL 2021, of which 90 had an ethics consideration section (ECS, not mandatory at the time). &
+Found ECSs by section title, then manually coded (two annotators) whether each mentions benefits, harms, and harms to vulnerable groups. Compared by track, by first-author region and by ethics review. &
+15.7\% of ACL 2021 long papers had an ECS (23.3\% at ACL 2022). Of these, 74\% described benefits, 52\% harms, 23\% harms to vulnerable groups, and 20\% only gave ``disclaimers''. Papers that went through ethics review discussed harms more often (69\% vs.\ 43\%). The authors warn that ECSs may become a mechanical exercise. \\
+\hline
+\newcite{karamolegkou-etal-2025-ethical}, NAACL 2025 &
+1,580 ethical concern statements from ACL Anthology papers, plus a survey (N = 200) of the general public and NLP professionals. &
+Built the EthiCon corpus, extracted ethical-concern keywords and tested automatic concern identification. Compared the concerns with those named in the survey and with existing taxonomies. &
+Releases a corpus of ethics statements and shows that concern identification can be partly automated. Finds gaps between the concerns raised in papers and those named by the public, professionals and existing taxonomies and guidelines. \\
+\hline
+\end{tabular}
+\caption{SOTA papers}
+\label{tab:sota_summary_2}
+\end{table}
+
+\section{Contribution Table}
+\label{sec:appendix_contrib}
+\begin{table}[H]   % era table[h!]
+\centering
+\small
+\begin{tabular}{p{1.6cm}p{3.9cm}c}
+\hline
+\textbf{Member} & \textbf{Contribution} & \textbf{Hours} \\
+\hline
+Aguilar & Introduction, SOTA on reproducibility and data reporting, SOTA comparison table and Conclusion & 5 \\
+Abbadessa & SOTA on limitations and ethics reporting, dataset section (NAACL/AAAI guidelines 2020--2026), data statement, ethical considerations & 5 \\
+Bernard & SOTA on evaluating compliance (human vs.\ LLM annotation), proposed approach, Overleaf setup, contribution table, LLM declaration, submission & 5 \\
+\hline
+\end{tabular}
+\caption{Contribution of each team member.}
+\label{tab:contrib}
+\end{table}
+
+\end{document}

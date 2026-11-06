@@ -1,0 +1,583 @@
+%
+% File main.tex
+%
+% NLP course project-proposal template, Warsaw University of Technology.
+% Prepared by Anna Wróblewska, adapted from the ACL 2015 conference
+% formatting template (acl2015.sty), originally by the ACL 2015
+% organizers and earlier ACL/EACL format authors (see acl2015.pdf
+% for the full credits chain).
+
+\documentclass[11pt]{article}
+\usepackage{acl2015}
+\usepackage{times}
+\usepackage{url}
+\usepackage{latexsym}
+\usepackage{xcolor}
+\usepackage{amsmath}
+
+% --- ours:
+\usepackage{tabularx}
+\usepackage{booktabs}
+%\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, shapes.geometric, fit, backgrounds, positioning}
+
+\setlength\titlebox{10cm}
+
+% You can expand the title box if you need extra space
+% to show all the authors. Please do not make the title box
+% smaller than 5cm (the original size); we will check this
+% in the camera-ready version and ask you to change it back.
+
+
+\title{Looped Transformers: improving reasoning through iterative computation}
+% https://www.overleaf.com/project/63440c16442dba647b52a1ae
+\author{Antoni Adaszkiewicz \\
+  313145 \\
+  {\tt antoni.adaszkiewicz.stud@pw.edu.pl} \\\AND
+  Kuba Drażan \\
+  327339 \\
+  {\tt kuba.drazan.stud@pw.edu.pl} \\ \AND
+  Rafał Pyzowski \\
+  320653 \\
+  {\tt rafal.pyzowski.stud@pw.edu.pl} \\ \AND
+  supervisor: Michał Gromadzki\\
+  Warsaw University of Technology \\
+  {\tt michal.gromadzki.dokt@pw.edu.pl}}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+% \section{Introduction}
+% Detailed description (\textbf{max. 4 meaningful pages}) in English, including the following information:
+% \begin{enumerate}
+% \item scientific goal of the project (description of the problem to be solved, research questions and hypotheses);
+% \item significance of the project (state of the art, justification for tackling a specific scientific problem, justification for the pioneering nature of the project, the impact of the project results on the development of the research field and scientific discipline);
+% \item concept and work plan (general work plan - with a timeline, specific research goals, results of preliminary research, risk analysis);
+% \item approach \& research methodology (underlying scientific methodology, methods, techniques and research tools, methods of results analysis, equipment and devices to be used in research);
+% \item well-justified project literature (a reference list for publications included in the project description, with full bibliographic data);
+% \item \textbf{data statement} (new for 2026/27) -- source of the data, licence, whether it contains personal data, and what you do about it. Six lines are enough;
+% \item \textbf{contribution table} -- each team member, what they did, workload in hours. \textbf{Required in this and every later phase report; a report submitted without it is not accepted for grading, not just marked down};
+% \item \textbf{declaration of LLM use} -- which tools, for what. \textbf{A report without this is not accepted for grading} (new for 2026/27).
+% \end{enumerate}
+
+% \textbf{Reminder: place this and every later submission in a folder named \texttt{surname\_surname\_surname\_surname} (all team members). The order set here must not change for the rest of the semester -- a mismatch costs 5 points.}
+
+\begin{abstract}
+Looped Transformers increase inference-time computation
+by repeatedly applying shared Transformer layers without
+increasing the number of model parameters. This project
+investigates whether additional iterations improve
+language model reasoning and whether the improvements
+justify their computational cost. We compare two models
+trained for recurrent computation, Ouro-2.6B and
+Huginn-3.5B, with Qwen3-4B, a standard pretrained
+Transformer modified to support training-free looping.
+We evaluate different loop counts and layer selections
+on mathematical and science reasoning benchmarks:
+GSM8K, MATH-500, and ARC-Challenge. Performance will
+be assessed using answer accuracy, inference latency,
+and computational cost. The project aims to provide
+a reproducible implementation of inference-time
+looping and analyze its effectiveness across models
+with comparable parameter counts.
+\end{abstract}
+
+\section{Scientific Goal of the Project}
+\label{sec:scientific_goal}
+
+\paragraph{Problem Description.}
+Standard Transformers process inputs through a fixed
+sequence of layers. Improving reasoning performance
+often involves using larger models or generating
+additional reasoning tokens, both of which increase
+computational requirements. Looped Transformers offer
+an alternative by repeatedly applying shared layers,
+increasing computation without adding parameters
+\cite{geiping2025scaling,zhu2026scaling,azizi2026looped}.
+
+However, models trained for recurrent computation
+may behave differently from standard pretrained
+models whose layers are repeated without retraining.
+It remains important to establish when additional
+iterations improve reasoning and whether the benefits
+outweigh the inference costs.
+
+Our goal is to systematically compare native and
+training-free looping across models with similar
+parameter budgets. We will investigate the effect
+of loop count and layer selection on reasoning
+accuracy, while measuring inference computation
+and runtime. The resulting comparisons will help
+identify the conditions under which iterative
+computation is beneficial.
+
+\paragraph{Research Questions.}
+This project investigates whether iterative computation
+improves language model reasoning without increasing
+the parameter budget. We address three research questions:
+\textbf{(RQ1)} Does increasing recurrent depth improve
+reasoning accuracy in models trained for looping,
+such as Ouro and Huginn?
+\textbf{(RQ2)} Can training-free looping improve reasoning
+performance in Qwen3-4B, and how does the selection
+of repeated layers affect the results?
+\textbf{(RQ3)} How do looped and conventional Transformers
+with comparable parameter counts differ in reasoning
+accuracy and inference cost, and do the improvements
+justify the additional computation?
+
+\section{Significance of the Project}
+\label{sec:significance_sota}
+
+\paragraph{Motivation and Contribution.}
+Improving language model reasoning often requires
+additional computational resources. Looped Transformers
+offer an alternative to increasing model size by
+allowing repeated computation using shared parameters
+\cite{geiping2025scaling,zhu2026scaling}.
+However, the benefits of additional iterations may
+depend on the architecture and inference cost.
+Our contribution will be a reproducible comparison
+of native and training-free looping across models
+with similar parameter counts. By evaluating reasoning
+accuracy alongside computational cost, we aim to
+identify when iterative computation is beneficial
+and when its additional cost outweighs the gains.
+
+% This can be right after into
+\section{Evaluation Datasets}
+\label{sec:datasets}
+
+We propose three publicly available benchmarks:
+GSM8K \cite{cobbe2021training} for multi-step
+arithmetic reasoning, MATH-500
+\cite{hendrycks2021math,lightman2024verify}
+for advanced mathematical reasoning, and
+ARC-Challenge \cite{clark2018arc} for
+multiple-choice science reasoning. The datasets are summarized in Table~\ref{tab:datasets}.
+
+\begin{table}[ht]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lrl@{}}
+\toprule
+\textbf{Dataset} & \textbf{Test / Total} &
+\textbf{Licence} \\
+\midrule
+GSM8K & 1,319 / 8,792 & MIT \\
+MATH-500 & 500 / 500 & MIT* \\
+ARC-Challenge & 1,172 / 2,590 & CC BY-SA 4.0 \\
+\bottomrule
+\end{tabular}
+\caption{Proposed evaluation benchmarks.
+*MIT applies to the upstream MATH repository;
+rights to some original problems are uncertain.}
+\label{tab:datasets}
+\end{table}
+
+\textbf{GSM8K} consists of 7,473 training and
+1,319 test examples, containing grade-school
+mathematics problems with step-by-step solutions
+and numerical answers.
+\textbf{MATH-500} contains 500 evaluation
+problems with numerical or symbolic answers,
+categorized by mathematical subject and
+difficulty level.
+\textbf{ARC-Challenge} consists of 1,119
+training, 299 validation, and 1,172 test
+questions, each with multiple answer choices
+and a correct answer identifier.
+
+Conventional class balance is not applicable
+to GSM8K or MATH-500, as their answers are
+open-ended. In ARC-Challenge, answer labels
+identify choices rather than fixed semantic
+classes. Their distribution will be examined
+in Phase 2.
+
+The datasets are available from Hugging Face:
+\texttt{openai/gsm8k},
+\texttt{HuggingFaceH4/MATH-500}, and
+\texttt{allenai/ai2\_arc}.
+All three are classified as \textbf{READY}
+for access. Evaluation will use only the
+designated test splits; no model training
+or fine-tuning is planned.
+
+\section{Paper summaries}
+\label{sec:paper_summaries}
+
+Table~\ref{tab:sota} synthesizes 16 key studies across training-free looping, native recurrent pre-training, parameter sharing, and latent reasoning, detailing each method's architectural approach, input representation, evaluation datasets with explicit splits, and reported numerical outcomes. Across these works, recurrent depth consistently improves multi-step reasoning and algorithmic length generalization while decoupling parameter count from computational depth. Crucially, the literature demonstrates that while naive test-time looping in frozen models destabilizes representations, controlled numerical integration, state interpolation, or learned halting reliably unlock latent computation without retraining from scratch.
+
+\begin{table*}[h!]
+\centering
+\caption{Prior evidence on looped, recurrent-depth, and parameter-shared Transformers. Values are the authors' reported metrics on the specified dataset and split; different tasks, inputs, and evaluation conventions prevent direct ranking. CoT = chain-of-thought; dev = development; PPL = perplexity.}
+\label{tab:sota}
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.05}
+\scriptsize
+\begin{tabularx}{\textwidth}{@{}p{2.2cm}p{3.8cm}X p{3.8cm}@{}}
+\toprule
+Work & Approach and input & Dataset and split & Reported outcome\\
+\midrule
+Chen et al. 2026 \cite{chen2026trainingfree} & Training-free mid-stack ($W=4$) $K$-stage RK sub-stepping ($h=1/K$, $\beta$-anchor) + 2-phase KV cache & MMLU-Pro 5-shot CoT test, GPQA-Main 0-shot test, ARC-C 25-shot test & $+2.64$~pp on MMLU-Pro ($57.14\% \rightarrow 59.79\%$), $+2.01$~pp on GPQA-Main with \texttt{Qwen3-4B-Instruct}; $+2.30$~pp on ARC-C\\
+Lys et al. 2026 \cite{lys2026inner} & Training-free middle-looping ($R=3$, $40\text{--}60\%$ depth) with Uniform / EMA / Auto-align state interpolation & GSM8K 5-shot test, WinoGrande 5-shot test, ARC-C 25-shot test & \texttt{Gemma-2-2B} gains $+1.36$~pp on GSM8K ($25.02\% \rightarrow 26.38\%$), $+0.78$~pp on WinoGrande, $+0.59$~pp on ARC-C\\
+Geiping et al. 2025 \cite{geiping2025scaling} & \texttt{Huginn-0125} (3.5B) recurrent depth $(2,4,2)$ with concat adapter, sandwich norm, loop scaling $r=1..32$ & ARC-E 0-shot test, ARC-C 25-shot test, GSM8K 8-shot CoT test & ARC-E $69.91\%$ (vs $34.89\%$ at $r=1$), ARC-C $38.23\%$ (vs $24.06\%$), GSM8K CoT $42.08\%$ (vs $0.00\%$ at $r=1$ and $2.20\%$ twin)\\
+Zhu et al. 2026 \cite{zhu2026scaling} & \texttt{Ouro} (1.4B/2.6B) whole-stack LoopLM ($T_{\text{max}}=4$) with uniform KL entropy loss and loss-gain Q-Exit gate & MATH500 5-shot CoT test, BBH 3-shot CoT test, MMLU-Pro 5-shot CoT test & \texttt{Ouro-2.6B} ($T=4$) scores $90.85\%$ on MATH500 (vs \texttt{Qwen3-8B} $62.30\%$), $80.46\%$ on BBH, $55.73\%$ on MMLU-Pro\\
+Bae et al. 2025 \cite{bae2025relaxed} & Relaxed Recursive Transformers; layer tying across depth blocks with SVD-initialized per-loop LoRA + depth batching & Few-shot test suite (HellaSwag, PIQA, WinoGrande, ARC-E/C), 60B-token uptraining split & \texttt{Recursive Gemma-1B} gains $+13.5$~pp accuracy ($22\%$ error reduction) over from-scratch 1B baseline; $2\text{--}3\times$ throughput speedup\\
+Dehghani et al. 2019 \cite{dehghani2019universal} & Universal Transformer; shared multi-head self-attention block iterated across depth with per-token ACT halting & WMT14 En-De newstest2014 test set, bAbI 10k QA test set & $28.9$ BLEU on WMT14 En-De (vs $28.0$ vanilla Transformer); $0.23\%$ mean error (0 failed tasks) on bAbI\\
+Lan et al. 2020 \cite{lan2020albert} & ALBERT; cross-layer parameter sharing across all blocks with factorized embeddings and SOP loss & GLUE benchmark test set, SQuAD v2.0 test set, RACE test set & \texttt{ALBERT-xxlarge} scores $89.4$ on GLUE, $92.2$ F1 on SQuAD v2.0, $86.5\%$ on RACE with $70\%$ fewer parameters than BERT-large\\
+Csord{\'a}s et al. 2024 \cite{csordas2024moeut} & MoEUT; weight-shared Universal Transformer layers with sparse MoE routing and peri-layernorm & C4 held-out validation set, LAMBADA test split, HellaSwag validation split & Perplexity $13.24$ on C4 at 244M params (vs $13.40$ baseline); $30.6\%$ on LAMBADA; $65.2\%$ on HellaSwag with $50\text{--}80\%$ MACs\\
+Saunshi et al. 2025 \cite{saunshi2025reasoning} & Looped Transformer with latent thoughts; identical weight-tied layers applied iteratively for multi-step reasoning & i-GSM synthetic math reasoning test set, modular arithmetic ($p$-hop) induction test split & Depth-8 model looped $L=2$ times achieves $73.2\%$ accuracy on i-GSM (matching depth-16 non-looped model $72.8\%$)\\
+Hao et al. 2024 \cite{hao2024training} & Coconut; continuous latent thought tokens fed back into context without discrete language projection & GSM8K test set, ProntoQA 5-hop test set, ProsQA test split & $34.1\%$ accuracy on GSM8K (outperforming No-CoT $16.5\%$ and matching explicit CoT); higher reasoning accuracy with fewer tokens\\
+Men et al. 2025 \cite{men2025shortgpt} & ShortGPT; pruning redundant middle layers based on Block Influence (BI) metrics without fine-tuning & MMLU 5-shot test set, GSM8K 8-shot test set (\texttt{LLaMA-2-70B}, \texttt{Mistral-7B}) & Retains over $95\%$ baseline accuracy on MMLU ($67.4\%$ vs $68.9\%$) and GSM8K ($53.8\%$ vs $54.5\%$) when pruning $25\%$ of mid-layers\\
+Lad et al. 2024 \cite{lad2024remarkable} & Layer ablation and swapping across four inference stages (detokenization, feature engineering, ensembling, sharpening) & OpenBookQA test set, ARC-Easy test set, \texttt{LLaMA-2-7B} / \texttt{Pythia} splits & Layer 0 ablation drops accuracy to chance ($<25\%$), whereas swapping adjacent mid-layers (layers 12--20) causes $<1.5\%$ degradation\\
+Balagansky \& Gavrilov 2022 \cite{balagansky2022palbert} & PALBERT; introduces adaptive computation time and Q-Exit thresholding to ALBERT's parameter-shared layers & GLUE benchmark development sets (MNLI, QQP, QNLI, SST-2) & Matches baseline ALBERT score ($82.8$ vs $82.3$ average score) while executing $35\%$ fewer layer iterations on average\\
+Fan et al. 2025 \cite{fan2025looped} & Looped Transformers with input-dependent adaptive halting for length generalization on algorithmic problems & Modular arithmetic, parity, and sequence copy tasks; trained on length 20, tested on length 100+ & $100\%$ test accuracy on length 100 sequences where standard fixed-depth Transformers collapse to $0\%$\\
+Bansal et al. 2022 \cite{bansal2022endtoend} & Recurrent deep thinking networks with continuous input injection and randomized unrolling during training & Prefix sums and 2D maze navigation; hard test splits ($2\times\text{--}5\times$ longer than training) & Achieves $99.8\%$ test accuracy on extrapolated problem lengths with persistent input injection (vs $2.1\%$ without)\\
+Giannou et al. 2023 \cite{giannou2023looped} & Looped Transformer configured as a programmable computer by storing instruction pointers and memory in residual stream & Synthetic programmatic execution traces (matrix multiplication, bubble sort); exact match split & $100\%$ execution accuracy on bounded programmatic subroutines in logarithmic looped steps\\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+% idk if you like me deleting things, if not then uncomment and delete my part
+% \section{Solution concept and experimental methodology}
+% \label{sec:solution_concept}
+
+% To keep the implementation simple, fast, and reproducible, we focus on a lightweight mid-stack loop wrapper operating during prompt prefill (\texttt{bypass} mode) \cite{chen2026trainingfree,lys2026inner}:
+% \begin{itemize}\setlength\itemsep{1pt}
+%   \item \textbf{Damped Euler vs.\ Naive Looping:} Given a contiguous 4-layer middle block $g = L_b \circ \dots \circ L_a$ of a frozen Transformer \cite{men2025shortgpt,lad2024remarkable}, naive repetition $x_{k+1} = g(x_k)$ pushes hidden states out of distribution \cite{bai2019deep}. We stabilize the trajectory by replacing a single block pass with $K$ damped Euler sub-steps:
+%   \begin{equation}
+%     x_{k+1} = \Big(1 - \frac{1}{K}\Big) x_k + \frac{1}{K} g(x_k), \quad k = 0, \dots, K-1,
+%   \end{equation}
+%   alongside simple Uniform state averaging $\hat{x} = \frac{1}{K+1}\sum_{i=0}^K x_i$ \cite{lys2026inner}.
+%   \item \textbf{Prefill-Only Execution (Zero KV-Cache Overhead):} During the $K-1$ intermediate loop passes, layers $a \dots b$ execute with \texttt{use\_cache=False}, and write to the key-value (KV) cache only on the final $K$-th pass (\texttt{bypass} decode mode) \cite{chen2026trainingfree}. This avoids complex token-level cache cropping and adds zero decoding latency.
+%   \item \textbf{Simple Convergence Stopping:} Beyond static loop counts $K \in \{1, 2, 4, 8\}$, we test one simple early-exit rule that halts iteration when the relative state change drops below a threshold, $\|x_k - x_{k-1}\|_2 / \|x_{k-1}\|_2 < \epsilon$ \cite{zhu2026scaling,geiping2025scaling}, plus \texttt{Ouro-2.6B}'s built-in Q-Exit gate \cite{balagansky2022palbert}.
+%   \item \textbf{Pre-Committed Metrics:} Using \texttt{lm-evaluation-harness}, we measure accuracy (\texttt{acc\_norm} / \texttt{exact\_match}) on four core benchmarks: ARC-Challenge \cite{clark2018think}, WinoGrande \cite{sakaguchi2021winogrande}, MMLU / MMLU-Pro \cite{hendrycks2021measuring,wang2024mmlupro}, and GSM8K \cite{cobbe2021training}, alongside LAMBADA perplexity \cite{paperno2016lambada}, effective depth $D_{\text{eff}} = N + (K-1)W$, and wall-clock runtime.
+% \end{itemize}
+
+\section{Experimental pipeline figure}
+\label{sec:pipeline_figure}
+
+Figure~\ref{fig:pipeline} illustrates the end-to-end experimental pipeline, connecting input benchmark test splits, the training-free mid-stack looping wrapper, inference-time halting control, and the evaluation methodology for reasoning accuracy and inference cost.
+
+\begin{figure*}[t]
+\centering
+\resizebox{0.99\textwidth}{!}{%
+\begin{tikzpicture}[
+    font=\sffamily\footnotesize,
+    >=Latex,
+    node distance=0.4cm and 0.5cm,
+    stage/.style={
+        draw=black!40, dashed, rounded corners=6pt, fill=black!2,
+        inner xsep=7pt, inner ysep=16pt
+    },
+    stagetitle/.style={
+        font=\sffamily\scriptsize\bfseries, text=black!75, anchor=north west, align=left
+    },
+    box/.style={
+        rectangle, draw=black!75, thick, rounded corners=3pt,
+        minimum height=0.75cm, minimum width=2.0cm, align=center, fill=white
+    },
+    databox/.style={
+        box, fill=purple!8, draw=purple!70!black, font=\sffamily\scriptsize
+    },
+    modelbox/.style={
+        box, fill=blue!8, draw=blue!70!black, font=\sffamily\scriptsize
+    },
+    loopbox/.style={
+        box, fill=orange!15, draw=orange!85!black, font=\sffamily\scriptsize\bfseries, minimum width=2.4cm
+    },
+    stabbox/.style={
+        box, fill=teal!12, draw=teal!80!black, font=\sffamily\scriptsize
+    },
+    decision/.style={
+        diamond, draw=purple!80!black, thick, fill=purple!10,
+        aspect=1.9, inner sep=1.2pt, align=center, font=\sffamily\tiny\bfseries
+    },
+    metricbox/.style={
+        box, fill=green!10, draw=green!60!black, font=\sffamily\scriptsize
+    },
+    arrow/.style={->, thick, draw=black!75},
+    looparrow/.style={->, very thick, draw=orange!85!black}
+]
+
+% ================= STAGE 1: INPUT BENCHMARKS & PROMPTS =================
+\node[databox] (bench1) at (0, 1.0) {\textbf{GSM8K} ($N=1,319$)\\Arithmetic Reasoning};
+\node[databox] (bench2) at (0, 0.0) {\textbf{MATH-500} ($N=500$)\\Symbolic / Math Reasoning};
+\node[databox] (bench3) at (0, -1.0) {\textbf{ARC-Challenge} ($N=1,172$)\\Multiple-Choice Science};
+
+\node[box, fill=gray!15, draw=gray!70, right=0.5cm of bench2, minimum width=1.85cm, font=\sffamily\scriptsize] (prep) {Generation-Based\\Prompting\\(Test Splits)};
+
+\draw[arrow] (bench1.east) -- ++(0.2,0) |- (prep.west);
+\draw[arrow] (bench2.east) -- (prep.west);
+\draw[arrow] (bench3.east) -- ++(0.2,0) |- (prep.west);
+
+% ================= STAGE 2: MODEL EXECUTION & LOOP WRAPPER =================
+\node[modelbox, right=1.35cm of prep, yshift=1.2cm] (baseline) {Default Inference ($K=1$ Baseline)\\\texttt{Qwen3-4B} ($L_0 \dots L_{35}$) / Native Looped LLMs};
+
+\node[modelbox, right=1.35cm of prep, yshift=-0.5cm] (preloop) {Pre-Loop Layers\\$L_0 \dots L_{14}$};
+\node[loopbox, right=0.45cm of preloop] (midloop) {Mid-Block $g$\\$L_{15} \dots L_{18}$ ($W=4$)};
+\node[stabbox, right=0.45cm of midloop] (stab) {Damped Euler / Avg\\$x_{k+1} = (1-\frac{1}{K})x_k + \frac{1}{K}g(x_k)$};
+\node[modelbox, right=0.55cm of stab, yshift=0.3cm] (postloop) {Post-Loop Layers\\$L_{19} \dots L_{35}$};
+
+% Halting node below stab
+\node[decision, below=0.35cm of stab] (halt) {Halt?\\$k = K$ or\\$\Delta x_k < \epsilon$};
+
+% Connections in Stage 2
+\draw[arrow] (prep.east) -- ++(0.55,0) |- node[pos=0.25, above, font=\tiny\bfseries]{No Loop} (baseline.west);
+\draw[arrow] (prep.east) -- ++(0.55,0) |- node[pos=0.25, below, font=\tiny\bfseries]{Looped Run} (preloop.west);
+\draw[arrow] (preloop) -- node[above, font=\tiny]{$x_0$} (midloop);
+\draw[arrow] (midloop) -- node[above, font=\tiny]{$g(x_k)$} (stab);
+\draw[arrow] (stab) -- (halt);
+\draw[arrow] (halt.east) -| node[pos=0.35, right, font=\tiny\bfseries, text=teal!70!black]{Yes: $\hat{x}_K$} (postloop.south);
+
+% Loopback arrow
+\draw[looparrow] (halt.west) -| node[pos=0.25, below, font=\tiny\bfseries, text=orange!85!black]{No: $k \leftarrow k+1$ (feed back $x_{k+1}$)} (midloop.south);
+
+% Note on KV Cache
+\node[draw=gray!60, dashed, fill=yellow!12, rounded corners=2pt, font=\sffamily\tiny, align=left, inner sep=2pt, below=0.2cm of preloop.south west, anchor=north west] (kvnote) {\textbf{Prefill \texttt{bypass}:} $k<K$: \texttt{no KV writes};\\step $K$: writes 1 canonical KV};
+
+% ================= STAGE 3: OUTPUT EXTRACTION & METRICS =================
+\node[metricbox, right=1.1cm of postloop, yshift=0.6cm] (m_acc) {\textbf{Reasoning Accuracy (\%)}\\Num. Match / Math-Verify / MC};
+\node[metricbox, right=1.1cm of postloop, yshift=-0.5cm] (m_cost) {\textbf{Inference Cost}\\Latency (s/q), FLOPs, Peak VRAM};
+\node[metricbox, right=1.1cm of postloop, yshift=-1.6cm] (m_tok) {\textbf{Sequence Accounting}\\Input \& Generated Token Counts};
+
+\node[box, fill=orange!10, draw=orange!70!black, right=0.6cm of m_cost, minimum width=2.1cm, font=\sffamily\scriptsize] (pareto) {\textbf{Trade-Off Analysis:}\\Accuracy vs.\\Inference Compute};
+
+% Connections to Stage 3
+\draw[arrow] (baseline.east) -| ++(0.35, -0.4) |- (m_acc.west);
+\draw[arrow] (postloop.east) -- ++(0.35,0) |- (m_acc.west);
+\draw[arrow] (postloop.east) -- ++(0.35,0) |- (m_cost.west);
+\draw[arrow] (postloop.east) -- ++(0.35,0) |- (m_tok.west);
+
+\draw[arrow] (m_acc.east) -| (pareto.north);
+\draw[arrow] (m_cost.east) -- (pareto.west);
+\draw[arrow] (m_tok.east) -| (pareto.south);
+
+% ================= BACKGROUND STAGE ENCLOSURES =================
+\begin{scope}[on background layer]
+    % Stage 1 Box
+    \node[stage, inner ysep=20pt, fit=(bench1) (bench3) (prep)] (s1_box) {};
+    \node[stagetitle] at (s1_box.north west) {Stage 1: Benchmarks\\\& Prompts};
+    
+    % Stage 2 Box
+    \node[stage, fit=(baseline) (preloop) (midloop) (stab) (postloop) (halt) (kvnote)] (s2_box) {};
+    \node[stagetitle] at (s2_box.north west) {Stage 2: Model Execution \& Training-Free Looping Wrapper};
+    
+    % Stage 3 Box
+    \node[stage, fit=(m_acc) (m_tok) (pareto)] (s3_box) {};
+    \node[stagetitle] at (s3_box.north west) {Stage 3: Evaluation Methodology \& Metrics};
+\end{scope}
+
+\end{tikzpicture}%
+}
+\caption{End-to-end experimental pipeline: Stage~1 prepares test-split inputs across GSM8K, MATH-500, and ARC-Challenge for generation-based evaluation; Stage~2 executes frozen \texttt{Qwen3-4B} (alongside native looped baselines \texttt{Ouro-2.6B} and \texttt{Huginn-3.5B}) across varying recurrence depths and layer configurations; Stage~3 extracts final answers (via normalized numerical matching, Math-Verify, and multiple-choice matching) and records latency, FLOPs, peak GPU memory, and token counts to analyze accuracy--compute trade-offs.}
+\label{fig:pipeline}
+\end{figure*}
+
+% idk if you like me deleting things, if not then uncomment and delete my part
+% \section{Model selection and experimental configurations}
+% \label{sec:model_selection}
+
+% \begin{table}[h]
+% \centering
+% \footnotesize
+% \setlength{\tabcolsep}{3.5pt}
+% \resizebox{0.5\textwidth}{!}{%
+% \begin{tabular}{@{}lllll@{}}
+% \toprule
+% \textbf{Model} & \textbf{Topology} & \textbf{Layers / Dim} & \textbf{License} & \textbf{VRAM} \\
+% \midrule
+% \texttt{Qwen3-4B} & Dense Pre-Norm & $36L$, $d=2560$ & Apache-2.0 & $\sim$8.0 GB \\
+% \texttt{Ouro-2.6B} & Whole-Stack Loop & $48L$ ($T=4$), $d=2048$ & Apache-2.0 & $\sim$5.5 GB \\
+% \texttt{Huginn-3.5B} & Sandwich $(2,4,2)$ & $8L$ ($r=32$), $d=5280$ & Apache-2.0 & $\sim$7.5 GB \\
+% \bottomrule
+% \end{tabular}%
+% }
+% \caption{Selected base models, topologies, licenses, and \texttt{bfloat16} weight VRAM footprints.}
+% \label{tab:models}
+% \end{table}
+
+% \begin{itemize}\setlength\itemsep{1pt}
+%   \item \textbf{Models \& Feasibility:} All three models (Table~\ref{tab:models}) use \texttt{Apache-2.0} licenses and fit in $5.5\text{--}8.0$~GB VRAM (\texttt{bfloat16}) on a single 24GB--40GB GPU. We patch frozen dense \texttt{Qwen3-4B} \cite{qwen2025qwen3} and run native looped \texttt{Ouro-2.6B} \cite{zhu2026scaling} and \texttt{Huginn-3.5B} \cite{geiping2025scaling} out-of-the-box from Hugging Face.
+%   \item \textbf{Layer Selection \& Loop Counts:} On \texttt{Qwen3-4B} ($N=36$), we fix the 4-layer middle block $[15, 18]$ ($W=4$) and run a sanity check against early $[3, 6]$ and late $[28, 31]$ blocks; \texttt{Ouro-2.6B} and \texttt{Huginn-3.5B} loop their native shared blocks. All three models are tested at $K \in \{1, 2, 4, 8\}$ loops.
+%   \item \textbf{Baseline Comparison:} Following \newcite{azizi2026looped}, each looped model ($K \in \{2, 4, 8\}$) is compared directly against its own unmodified $K=1$ baseline and across effective depth $D_{\text{eff}}$ \cite{csordas2024moeut,rein2024gpqa}.
+% \end{itemize}
+
+\section{Model Selection}
+\label{sec:model_selection}
+
+We select three open-weight language models with
+comparable parameter counts: Qwen3-4B
+\cite{qwen2025qwen3}, Ouro-2.6B
+\cite{zhu2026scaling}, and Huginn-3.5B
+\cite{geiping2025scaling}. Qwen3-4B serves as
+the standard Transformer baseline and as the model
+for training-free looping. Ouro and Huginn were
+trained with recurrent computation, allowing us
+to evaluate models designed for iterative processing. Their architectures, parameter counts, and estimated memory requirements are summarized in Table~\ref{tab:models}.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lclc@{}}
+\toprule
+Model & Params & Type & BF16 weights \\
+\midrule
+Qwen3-4B & 4B & Standard & 8.0 GB \\
+Ouro-2.6B & 2.6B & Looped & 5.2 GB \\
+Huginn-3.5B & 3.5B & Recurrent & 7.0 GB \\
+\bottomrule
+\end{tabular}
+\caption{Selected models and approximate GPU
+memory for weights in 16-bit precision,
+excluding inference overhead.}
+\label{tab:models}
+\end{table}
+
+All three model checkpoints are publicly available
+on Hugging Face under the Apache 2.0 licence.
+We have access to a GPU with 12 GB of VRAM,
+which may support inference with limited batch
+sizes and sequence lengths. However, actual memory requirements may be higher,
+particularly if higher numerical precision is used.
+If necessary, we may use external GPU providers.
+
+% Should be placed after model selection
+\section{Evaluation Methodology}
+\label{sec:evaluation}
+
+\paragraph{Reasoning Accuracy.}
+All models will be evaluated on the same benchmark test
+splits using generation-based evaluation. Final answers
+will be extracted from model outputs and compared with
+reference answers. GSM8K will use normalized numerical
+matching, MATH-500 will use mathematical equivalence
+checking (Math-Verify), and ARC-Challenge will use
+multiple-choice accuracy. Missing or unparseable answers
+will count as incorrect. Accuracy, defined as the
+proportion of correctly answered questions, will be
+reported separately for each benchmark.
+
+\paragraph{Inference Cost.}
+We will measure inference latency (seconds per question),
+estimate floating-point operations (FLOPs), and record
+peak GPU memory usage. Input and generated token counts
+will also be recorded to account for differences in
+sequence length and generated response length.
+
+\paragraph{Experimental Comparisons.}
+We will first compare each model across different
+recurrence depths against its default inference
+configuration. For Qwen3-4B, we will additionally
+evaluate the effect of repeating different Transformer
+layers. Prompting, decoding settings, and output limits
+will remain fixed within each model's experiments.
+
+We will then compare Qwen3-4B, Ouro-2.6B, and
+Huginn-3.5B across their shared benchmarks, reporting
+parameter counts alongside accuracy and inference cost.
+Since the models differ in architecture and training,
+cross-model comparisons will be interpreted cautiously.
+
+We will analyze accuracy--compute trade-offs across
+looping configurations to determine whether additional
+inference computation justifies improvements in
+reasoning performance.
+
+\section{Work plan and deliverables}
+\label{sec:work_plan}
+
+Each workstream has one \emph{accountable owner} and one \emph{supporting implementer/reviewer}; the supporting member contributes code, testing or interpretation[cite: 265]. All three members review five papers each and jointly prepare the report, video, responses to feedback and Q\&A[cite: 265]. Work division and deliverables are presented in Table~\ref{tab:roles}, and the week-by-week schedule is given in Table~\ref{tab:schedule}[cite: 265].
+
+\begin{table}[h]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}p{2.8cm}lp{3.4cm}@{}}
+\toprule
+\textbf{Workstream} & \textbf{Owner} & \textbf{Deliverable} \\
+\midrule
+Theory \& Error Analysis & Rafał  & SOTA taxonomy \& 20-error failure-mode audit report \\
+Evaluation \& Benchmarks & Antoni & Standardized \texttt{lm-eval} suite, CI \& Pareto figures \\
+Looping Wrapper \& Models & Kuba   & PyTorch mid-block loop wrapper \& PoC/final MRs \\
+\bottomrule
+\end{tabular}
+\caption{Workstream division, accountable owners, and project deliverables.}
+\label{tab:roles}
+\end{table}
+
+\begin{table}[h]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\resizebox{0.5\textwidth}{!}{%
+\begin{tabular}{@{}lp{4.2cm}l@{}}
+\toprule
+\textbf{Dates} & \textbf{Tasks and Milestones} & \textbf{Team} \\
+\midrule
+30 Oct--4 Nov & Verify literature, licenses, and data splits; Phase-1 proposal (4 Nov) & All; Kuba edits \\
+5--11 Nov & Loaders (\texttt{Qwen3}, \texttt{Ouro}, \texttt{Huginn}), \texttt{lm-eval} harness; $K=1$ baselines & Antoni, Rafał, Kuba \\
+12--18 Nov & Mid-block wrapper PoC (\texttt{Qwen3-4B} $[15, 18]$); feedback (13 Nov); 10-min video (18 Nov) & Kuba, Rafał \\
+19--25 Nov & Initial runs ($K \in \{2, 4\}$) on ARC-C \& GSM8K; peak VRAM check (12~GB); Q\&A (25 Nov) & Rafał, Antoni \\
+26 Nov--2 Dec & PoC merge request, Damped Euler vs.\ naive loop, revised report, rebuttal (2 Dec) & All; Kuba edits \\
+3--9 Dec & Apply Phase-1 feedback; freeze layer window $[15, 18]$ and \texttt{Math-Verify} splits & Antoni, Rafał \\
+10--16 Dec & Main $K \in \{1, 2, 4, 8\}$ evaluation across 3 models on GSM8K, MATH-500, ARC-C; log 20 errors & Kuba, Antoni \\
+17--23 Dec & Early-exit \& Q-Exit check; accuracy vs.\ latency/FLOPs Pareto figures; draft discussion & Rafał, Antoni \\
+24--30 Dec & Break / contingency buffer; no dependency on new experiments & All if needed \\
+31 Dec--6 Jan & Cross-reproduce best configurations; review final report draft & All; Antoni verifies \\
+7--13 Jan & Final report PDF, code repository/MR cleanup, presentation video, and final Q\&A (13 Jan) & All \\
+\bottomrule
+\end{tabular}%
+}
+\caption{Week-by-week project plan and milestone schedule.}
+\label{tab:schedule}
+\end{table}
+
+% \section*{Data Statement}
+% All experiments use public academic benchmarks via \texttt{lm-evaluation-harness}: MMLU and MMLU-Pro (MIT), AI2 ARC-Challenge (CC BY-SA 4.0), WinoGrande (Apache-2.0), GSM8K (MIT), and LAMBADA (CC BY 4.0). None of these datasets contain personally identifiable information (PII) or sensitive personal data. All evaluated checkpoints (\texttt{Qwen3-4B}, \texttt{Ouro-2.6B}, \texttt{Huginn-3.5B}) are released under the Apache-2.0 license.
+
+\section*{Data Statement}
+\label{sec:data-statement}
+The datasets are publicly available on Hugging Face,
+with sources and licences listed in Table~\ref{tab:datasets}.
+They contain educational questions and answers,
+with no personal data expected.
+We will use existing annotations without collecting
+new data or performing manual annotation.
+The pretrained models (Qwen3-4B, Ouro-2.6B, and
+Huginn-3.5B) are also obtained from Hugging Face under Apache 2.0 licences (each one).
+Neither datasets nor model weights will be redistributed,
+and their licensing and attribution requirements
+will be respected.
+
+\section*{Contribution Table}
+\begin{center}
+\footnotesize
+\resizebox{0.48\textwidth}{!}{%
+\begin{tabular}{@{}lp{4.2cm}r@{}}
+\toprule
+\textbf{Member} & \textbf{Phase 1 Tasks Completed} & \textbf{Hours} \\
+\midrule
+Rafał Pyzwoski & Problem formulation, theoretical taxonomy, 5 theory SOTA summaries. & 4 h \\
+Antoni Adaszkiewicz & Benchmark selection, evaluation protocol, metrics, 5 SOTA summaries. & 6 h \\
+Kuba Dra\.{z}an & Looping wrapper design, 5 architecture SOTA summaries, model audit, pipeline figure, schedule. & 5 h \\
+\bottomrule
+\end{tabular}%
+}
+\end{center}
+
+\section*{Declaration of LLM Use}
+Large Language Models (Google Gemini) were used to assist in formatting LaTeX code, structuring tables, and verifying bibliographic entries. All scientific designs, mathematical formulations, and experimental claims were verified against primary sources by the authors.
+
+% include your bib file like this:
+\bibliographystyle{acl}
+\bibliography{reference}
+
+\end{document}
