@@ -62,6 +62,10 @@ Haystack is an open-source framework for building AI agents and RAG applications
 \subsection{ARES: An Automated Evaluation Framework for RAGs}
 ARES is a publicly sourced framework designed for evaluating RAG performance \cite{ares}. The scoring and comparisons it makes grounds for are based on context relevance, answer faithfulness, and answer relevance. ARES uses light-weight LLM judges and prediction-powered inference (PPI). It is designed to rely on synthethic training data and only a small set of human-made annotations. In their work the original researchers have compared ARES to RAGAS and GPT-3.5 Judge. They compared these judges against selected datasets (among them Natural Questions and HotpotQA). Only a couple hundred human-made annotations needed to be used. They found ARES had achieved the most accurate evaluation results of the three RAG judges across all of the explored datasets. Other reviewers have mentioned excellent precision of the framework but also noted that the remaining reliance on human-made annotations might possibly restrict scalability \cite{brown2025}.
 
+\subsection{RAGAs: Automated Evaluation of Retrieval Augmented Generation}
+
+RAGAs (Retrieval Augmented Generation Assessment) is an open-source framework for evaluating Retrieval Augmented Generation pipelines \cite{ragas}. It uses three metrics to describe the RAG in question, that is: faithfulness, answer relevance and context relevance, similar to the aforementioned ARES. A crucial difference between the two is that RAGAs doesn't need human-made annotations to work and instead relies on cosine similarity for measuring relationships between queries, retrieved contexts and LLM responses. \\The authors tested this framework using a self-made dataset named WikiEval, consisting of selected Wikipedia pages. ChatGPT was used to generate questions and answers based on the dataset. This data was in turn human-annotated by two people. Agreement with human annotators was then compared for RAGAs and ChatGPT, taking the three aforementioned metrics into account. RAGAs was found to score better on all of these metric. Other researchers have mentioned that the approach RAGAs takes features a trade-off between increased efficiency and decreased depth of insight \cite{brown2025}.
+
 \subsection{RAGFlow}
 RAGFlow is an open-source RAG engine based on deep document understanding. When combined with an LLM, it provides answers to questions, complete with substantiated citations from various data formats. RAGFlow enables developers to transform data into high-fidelity, production-ready AI systems with higt efficiency and precision. The model analyzes the question and, if it needed, breaks it down, retrieves knowledge, and verifies evidence. It complete context through many rounds of retrieval and reasoning to help generate well-grounded answers. It choose beetween thinking modes to control retrieval and reasoning depth according to question complexity. RAGFlow supports text, presentaions, images PDFs and other data types.
 
@@ -173,7 +177,7 @@ W11: 14--20 Jan\newline\textit{20 Jan: rebuttals} & own answers to final Q\&A & 
 Student & Work & Hours \\
 \hline
 Jan Czemko & Solution concept and plan & 3h \\ 
-Karolina Móżdżyńska & cell5 & cell6 \\ 
+Karolina Móżdżyńska & RAGAs, ARES, Haystack & 4h \\ 
 Anna Piórkowska & Introduction, Data, RAGFLow and DSPy & 4h \\ 
 \hline
 \end{tabular}
@@ -230,6 +234,11 @@ GitHub. https://github.com/stanfordnlp/dspy.
 Omar Khattab, Stanford NLP.
 DSPy Documentation: Program, Don't Prompt, Your LLMs.
 https://dspy.ai/current/.
+
+\bibitem[Shahul et al., 2024]{ragas}
+Shahul Es, Jithin James, Luis Espinosa-Anke, and Steven Schockaert. 2024.
+RAGAS: Automated Evaluation of Retrieval Augmented Generation. 
+
 
 \end{thebibliography}
 
